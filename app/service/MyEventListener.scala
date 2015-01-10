@@ -16,6 +16,7 @@
  */
 package service
 
+import models.BasicUser
 import securesocial.core._
 import play.api.mvc.{ Session, RequestHeader }
 import play.api.Logger
@@ -23,8 +24,8 @@ import play.api.Logger
 /**
  * A sample event listener
  */
-class MyEventListener extends EventListener[DemoUser] {
-  def onEvent(event: Event[DemoUser], request: RequestHeader, session: Session): Option[Session] = {
+class MyEventListener extends EventListener[BasicUser] {
+  def onEvent(event: Event[BasicUser], request: RequestHeader, session: Session): Option[Session] = {
     val eventName = event match {
       case LoginEvent(u) => "login"
       case LogoutEvent(u) => "logout"
@@ -33,7 +34,7 @@ class MyEventListener extends EventListener[DemoUser] {
       case PasswordChangeEvent(u) => "password change"
     }
 
-    Logger.info("traced %s event for user %s".format(eventName, event.user.main.userId))
+    Logger.info("traced %s event for user %s".format(eventName, event.user.main.email))
 
     // retrieving the current language
     Logger.info("current language is %s".format(request2lang(request)))

@@ -1,8 +1,8 @@
-@(current: service.DemoUser)(implicit request: RequestHeader)
+@(current: BasicUser)(implicit request: RequestHeader)
 
     @main("SecureSocial - Account Link Result") {
 <div class="page-header">
-    <h2><img src="@current.main.avatarUrl.getOrElse("")" alt="@current.main.firstName.getOrElse("")" width="40px" height="40px"/> Hey @current.main.firstName.getOrElse("")</h2>
+    <h2><img src="@current.main.avatarUrl.getOrElse("")" alt="@current.main.fullName" width="40px" height="40px"/> Hey @current.main.fullName</h2>
 </div>
 
 <div class="clearfix">
@@ -12,12 +12,9 @@
         <h2>@linked.providerId
         </h2>
         <ul>
-            <li>User Id: @linked.userId</li>
-            <li>Fist name: @linked.firstName.getOrElse("")</li>
-            <li>Last name: @linked.lastName.getOrElse("")</li>
-            <li>Full name: @linked.fullName.getOrElse("")</li>
+            <li>Full name: @linked.fullName</li>
             <li>Logged in from: @linked.providerId</li>
-            <li>Email: @linked.email.map { email => @email }.getOrElse("Not Available")</li>
+            <li>Email: @linked.email.map { email => @email }</li>
             <li>Authentication method: @linked.authMethod</li>
         </ul>
 

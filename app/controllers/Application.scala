@@ -16,13 +16,19 @@
  */
 package controllers
 
+import models.BasicUser
 import securesocial.core._
-import service.DemoUser
+//import service.DemoUser
 import play.api.mvc.{ Action, RequestHeader }
 
-class Application(override implicit val env: RuntimeEnvironment[DemoUser]) extends securesocial.core.SecureSocial[DemoUser] {
+class Application(override implicit val env: RuntimeEnvironment[BasicUser]) extends securesocial.core.SecureSocial[BasicUser] {
   def index = SecuredAction { implicit request =>
     Ok(views.html.index(request.user.main))
+  }
+
+  def nonSecureIndex = Action { implicit request =>
+    request.headers.toSimpleMap.foreach(println)
+    Ok
   }
 
   // a sample action using an authorization implementation
@@ -39,16 +45,16 @@ class Application(override implicit val env: RuntimeEnvironment[DemoUser]) exten
    */
   def currentUser = Action.async { implicit request =>
     import play.api.libs.concurrent.Execution.Implicits._
-    SecureSocial.currentUser[DemoUser].map { maybeUser =>
-      val userId = maybeUser.map(_.main.userId).getOrElse("unknown")
+    SecureSocial.currentUser[BasicUser].map { maybeUser =>
+      val userId = maybeUser.map(_.main.email).getOrElse("unknown")
       Ok(s"Your id is $userId")
     }
   }
 }
 
 // An Authorization implementation that only authorizes uses that logged in using twitter
-case class WithProvider(provider: String) extends Authorization[DemoUser] {
-  def isAuthorized(user: DemoUser, request: RequestHeader) = {
+case class WithProvider(provider: String) extends Authorization[BasicUser] {
+  def isAuthorized(user: BasicUser, request: RequestHeader) = {
     user.main.providerId == provider
   }
 }

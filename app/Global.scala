@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,20 +14,35 @@
  * limitations under the License.
  *
  */
-import controllers.CustomRoutesService
+
 import java.lang.reflect.Constructor
+
+import authentication.WistRuntimeEnvironment
+import models.BasicUser
 import securesocial.core.RuntimeEnvironment
-import service.{ DemoUser, MyEventListener, InMemoryUserService }
+import service.{MyEventListener, SlickTwilioUserService}
+
 
 object Global extends play.api.GlobalSettings {
 
   /**
    * The runtime environment for this sample app.
    */
-  object MyRuntimeEnvironment extends RuntimeEnvironment.Default[DemoUser] {
-    override lazy val routes = new CustomRoutesService()
-    override lazy val userService: InMemoryUserService = new InMemoryUserService()
+
+  object MyRuntimeEnvironment extends WistRuntimeEnvironment.Default[BasicUser] {
+    //    override lazy val routes = new CustomRoutesService()
     override lazy val eventListeners = List(new MyEventListener())
+    //    override lazy val providers = ListMap (
+    //      // oauth 2 client providers
+    //      include(new FacebookProvider(routes, cacheService, oauth2ClientFor(FacebookProvider.Facebook))),
+    //      include(new FoursquareProvider(routes, cacheService, oauth2ClientFor(FoursquareProvider.Foursquare))),
+    //      include(new GoogleProvider(routes, cacheService, oauth2ClientFor(GoogleProvider.Google))),
+    //      include(new InstagramProvider(routes, cacheService, oauth2ClientFor(InstagramProvider.Instagram))),
+    //      // oauth 1 client providers
+    //      include(new TwitterProvider(routes, cacheService, oauth1ClientFor(TwitterProvider.Twitter))),
+    //      // username password
+    //      include(new UsernamePasswordProvider[BasicUser](userService, avatarService, viewTemplates, passwordHashers))
+    //      )
   }
 
   /**
@@ -43,7 +58,7 @@ object Global extends play.api.GlobalSettings {
   override def getControllerInstance[A](controllerClass: Class[A]): A = {
     val instance = controllerClass.getConstructors.find { c =>
       val params = c.getParameterTypes
-      params.length == 1 && params(0) == classOf[RuntimeEnvironment[DemoUser]]
+      params.length == 1 && params(0) == classOf[RuntimeEnvironment[BasicUser]]
     }.map {
       _.asInstanceOf[Constructor[A]].newInstance(MyRuntimeEnvironment)
     }
