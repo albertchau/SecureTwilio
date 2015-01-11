@@ -2,19 +2,18 @@ package controllers
 
 import java.util.UUID
 
+import authentication.WistSecureSocial
 import models.TableQueries.twilioTokens
 import models.{RegisterNewInfo, TwilioToken}
 import org.joda.time.DateTime
 import play.api.Play
 import play.api.db.slick.DB
 import play.api.mvc._
-import securesocial.core.SecureSocial
-import scala.concurrent.Future
 import scala.slick.driver.MySQLDriver.simple._
 
 import scala.concurrent.Future
 
-abstract class TwilioBasedOperations[U] extends SecureSocial[U] {
+abstract class TwilioBasedOperations[U] extends WistSecureSocial[U] {
   val Success = "success"
   val Error = "error"
   val Email = "email"

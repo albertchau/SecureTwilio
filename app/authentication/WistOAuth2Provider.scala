@@ -6,7 +6,7 @@ import _root_.java.util.UUID
 import models.AuthorizedProfile
 import play.api.Play
 import play.api.libs.json.{ JsError, JsSuccess, JsValue, Json }
-import play.api.libs.ws.Response
+import play.api.libs.ws._
 import play.api.mvc._
 import securesocial.core._
 import securesocial.core.services.{ CacheService, HttpService, RoutesService }
@@ -22,7 +22,7 @@ trait WistOAuth2Client {
 
   def retrieveProfile(profileUrl: String)(implicit ec: ExecutionContext): Future[JsValue]
 
-  type OAuth2InfoBuilder = Response => OAuth2Info
+  type OAuth2InfoBuilder = WSResponse => OAuth2Info
 }
 
 object WistOAuth2Client {
@@ -65,7 +65,7 @@ abstract class WistOAuth2Provider(routesService: RoutesService,
     }
   }
 
-  protected def buildInfo(response: Response): OAuth2Info = {
+  protected def buildInfo(response: WSResponse): OAuth2Info = {
     val json = response.json
     logger.debug("[securesocial] got json back [" + json + "]")
     OAuth2Info(

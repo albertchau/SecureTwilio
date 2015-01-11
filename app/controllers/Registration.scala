@@ -18,6 +18,8 @@ package controllers
 
 import _root_.java.util.UUID
 
+import authentication.{WistEvents, WistSecureSocial, WistRuntimeEnvironment}
+import authentication.providers.utils.WistPasswordValidator
 import models._
 import org.joda.time.DateTime
 import play.api.data.Forms._
@@ -25,13 +27,12 @@ import play.api.data._
 import play.api.i18n.Messages
 import play.api.libs.json.{JsString, JsValue, Writes, Json}
 import play.api.mvc.Action
-import securesocial.controllers.{RegistrationInfo, MailTokenBasedOperations}
 import securesocial.core._
-import securesocial.core.authenticator.{HttpHeaderAuthenticator, CookieAuthenticator}
+import securesocial.core.authenticator.{HttpHeaderAuthenticator}
 import securesocial.core.providers.{MailToken, UsernamePasswordProvider}
 import securesocial.core.providers.utils._
-import securesocial.core.services.SaveMode
-import service.{ SlickTwilioUserService}
+import authentication.services.SaveMode
+import service.{SlickTwilioUserService}
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 
@@ -40,7 +41,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
  *
  * @param env the environment
  */
-class Registration(override implicit val env: RuntimeEnvironment[AuthorizedProfile]) extends BaseRegistration[AuthorizedProfile]
+class Registration(override implicit val env: WistRuntimeEnvironment[AuthorizedProfile]) extends BaseRegistration[AuthorizedProfile]
 
 /**
  * A trait that provides the means to handle user registration
@@ -49,9 +50,9 @@ class Registration(override implicit val env: RuntimeEnvironment[AuthorizedProfi
  */
 trait BaseRegistration[U] extends TwilioBasedOperations[U] {
 
-  import securesocial.controllers.BaseRegistration._
+  import controllers.BaseRegistration._
 
-  private val logger = play.api.Logger("securesocial.controllers.Registration")
+  private val logger = play.api.Logger("Registration")
 
   val providerId = UsernamePasswordProvider.UsernamePassword
 
@@ -66,7 +67,7 @@ trait BaseRegistration[U] extends TwilioBasedOperations[U] {
       PhoneNumber -> nonEmptyText,
       Password ->
         tuple(
-          Password1 -> nonEmptyText.verifying(PasswordValidator.constraint),
+          Password1 -> nonEmptyText.verifying(WistPasswordValidator.constraint),
           Password2 -> nonEmptyText
         ).verifying(Messages(PasswordsDoNotMatch), passwords => passwords._1 == passwords._2)
     ) // binding
@@ -86,7 +87,7 @@ trait BaseRegistration[U] extends TwilioBasedOperations[U] {
   def startSignUp = Action {
     implicit request =>
       if (SecureSocial.enableRefererAsOriginalUrl) {
-        SecureSocial.withRefererAsOriginalUrl(Ok(views.html.startSignUp(startForm)))
+        WistSecureSocial.withRefererAsOriginalUrl(Ok(views.html.startSignUp(startForm)))
       } else {
         Ok(views.html.startSignUp(startForm))
       }
@@ -111,7 +112,7 @@ trait BaseRegistration[U] extends TwilioBasedOperations[U] {
             case None =>
               val token = createAndSaveToken(newInfo)
               logger.info("TwilioToken for " + email + " is " + securesocial.controllers.routes.Registration.signUp(token.uuid).absoluteURL(IdentityProvider.sslEnabled))
-              Redirect(routes.Registration.signUp(token.uuid))
+              Redirect(routes.Registration.signUp(token.uuid)).as(JSON)
           }
         }
       )
@@ -134,6 +135,7 @@ trait BaseRegistration[U] extends TwilioBasedOperations[U] {
     def writes(d: org.joda.time.DateTime): JsValue = JsString(d.toString)
   }
   implicit val HeaderTokenWrites = Json.writes[TokenResponse]
+
   /**
    * Handles posts from the sign up page
    */
@@ -152,15 +154,13 @@ trait BaseRegistration[U] extends TwilioBasedOperations[U] {
                 Future.successful(BadRequest("TwilioCode did not match"))
               } else {
                 val info = token.info
-                val newUser = BasicProfile(
+                val newUser = AuthorizedProfile(
                   providerId,
-                  info.phoneNumber,
-                  None,
-                  None,
+                  info.email,
                   Some(info.fullName),
-                  Some(info.email.toLowerCase),
-                  None,
+                  Some(info.phoneNumber),
                   AuthenticationMethod.UserPassword,
+                  None,
                   None,
                   passwordInfo = Some(env.currentHasher.hash(info.password))
                 )
@@ -176,7 +176,7 @@ trait BaseRegistration[U] extends TwilioBasedOperations[U] {
                   saved <- env.userService.save(toSave, SaveMode.SignUp);
                   deleted <- deleteToken(token.uuid)
                 ) yield {
-                  Events.fire(new SignUpEvent(saved)).getOrElse(request.session)
+                  WistEvents.fire(new SignUpEvent(saved)).getOrElse(request.session)
                   env.authenticatorService.find(HttpHeaderAuthenticator.Id).map {
                     _.fromUser(saved).flatMap { authenticator =>
                       val token = TokenResponse(authenticator.id, authenticator.expirationDate)

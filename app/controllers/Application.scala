@@ -16,12 +16,13 @@
  */
 package controllers
 
+import authentication.{WistSecureSocial, WistRuntimeEnvironment}
 import models.BasicUser
 import securesocial.core._
 //import service.DemoUser
 import play.api.mvc.{ Action, RequestHeader }
 
-class Application(override implicit val env: RuntimeEnvironment[BasicUser]) extends securesocial.core.SecureSocial[BasicUser] {
+class Application(override implicit val env: WistRuntimeEnvironment[BasicUser]) extends WistSecureSocial[BasicUser] {
   def index = SecuredAction { implicit request =>
     Ok(views.html.index(request.user.main))
   }
@@ -45,7 +46,7 @@ class Application(override implicit val env: RuntimeEnvironment[BasicUser]) exte
    */
   def currentUser = Action.async { implicit request =>
     import play.api.libs.concurrent.Execution.Implicits._
-    SecureSocial.currentUser[BasicUser].map { maybeUser =>
+    WistSecureSocial.currentUser[BasicUser].map { maybeUser =>
       val userId = maybeUser.map(_.main.email).getOrElse("unknown")
       Ok(s"Your id is $userId")
     }

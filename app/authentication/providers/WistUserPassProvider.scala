@@ -8,7 +8,7 @@ import play.api.Play._
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc._
-import securesocial.core.{AuthenticationMethod, ApiSupport, IdentityProvider}
+import securesocial.core.{AuthenticationMethod}
 import securesocial.core.providers.utils.PasswordHasher
 import securesocial.core.services.{AvatarService}
 
@@ -61,7 +61,7 @@ class WistUserPassProvider[U](userService: WistUserService[U],
 
           val authenticatedAndUpdated = for (
             u <- loggedIn;
-            service <- avatarService;
+            service <- avatarService
           ) yield {
             service.urlFor(u.email).map {
               case avatar if avatar != u.avatarUrl => u.copy(avatarUrl = avatar)
@@ -71,8 +71,7 @@ class WistUserPassProvider[U](userService: WistUserService[U],
             }
           }
 
-          authenticatedAndUpdated
-            .getOrElse {
+          authenticatedAndUpdated.getOrElse {
             Future.successful {
               if (apiMode)
                 WistAuthenticationResult.Failed("Invalid credentials")
@@ -80,7 +79,6 @@ class WistUserPassProvider[U](userService: WistUserService[U],
                 NavigationFlow(badRequest(WistUserPassProvider.loginForm, Some(InvalidCredentials)))
             }
           }
-          Future.successful(WistAuthenticationResult.Failed("Invalid credentials"))
         }
       })
   }

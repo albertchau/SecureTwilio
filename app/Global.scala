@@ -19,11 +19,13 @@ import java.lang.reflect.Constructor
 
 import authentication.WistRuntimeEnvironment
 import models.BasicUser
-import securesocial.core.RuntimeEnvironment
-import service.{MyEventListener, SlickTwilioUserService}
+import play.api._
+import securesocial.core.authenticator.{HttpHeaderAuthenticatorBuilder, CookieAuthenticatorBuilder}
+import securesocial.core.services.AuthenticatorService
+import service.{SlickAuthenticatorStore, MyEventListener, SlickTwilioUserService}
 
 
-object Global extends play.api.GlobalSettings {
+object Global extends GlobalSettings {
 
   /**
    * The runtime environment for this sample app.
@@ -32,6 +34,12 @@ object Global extends play.api.GlobalSettings {
   object MyRuntimeEnvironment extends WistRuntimeEnvironment.Default[BasicUser] {
     //    override lazy val routes = new CustomRoutesService()
     override lazy val eventListeners = List(new MyEventListener())
+    override lazy val userService: SlickTwilioUserService = new SlickTwilioUserService()
+
+    override lazy val authenticatorService: AuthenticatorService[BasicUser] = new AuthenticatorService[BasicUser](
+      new CookieAuthenticatorBuilder[BasicUser](new SlickAuthenticatorStore, idGenerator),
+      new HttpHeaderAuthenticatorBuilder[BasicUser](new SlickAuthenticatorStore, idGenerator)
+    )
     //    override lazy val providers = ListMap (
     //      // oauth 2 client providers
     //      include(new FacebookProvider(routes, cacheService, oauth2ClientFor(FacebookProvider.Facebook))),
@@ -58,7 +66,7 @@ object Global extends play.api.GlobalSettings {
   override def getControllerInstance[A](controllerClass: Class[A]): A = {
     val instance = controllerClass.getConstructors.find { c =>
       val params = c.getParameterTypes
-      params.length == 1 && params(0) == classOf[RuntimeEnvironment[BasicUser]]
+      params.length == 1 && params(0) == classOf[WistRuntimeEnvironment[BasicUser]]
     }.map {
       _.asInstanceOf[Constructor[A]].newInstance(MyRuntimeEnvironment)
     }

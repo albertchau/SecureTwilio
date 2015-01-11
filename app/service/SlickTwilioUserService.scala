@@ -24,36 +24,35 @@ import play.api.Play.current
 import play.api.db.slick.DB
 import securesocial.core._
 import securesocial.core.providers.{UsernamePasswordProvider => UserPass}
-import securesocial.core.services.{SaveMode}
-
+import authentication.services.SaveMode
 import scala.concurrent.Future
 import scala.slick.driver.MySQLDriver.simple._
 
 class SlickTwilioUserService extends WistUserService[BasicUser] {
-
-  implicit def BasicProfile2AuthProfile(value: BasicProfile): AuthorizedProfile = AuthorizedProfile(
-    value.providerId,
-    value.email.getOrElse(""),
-    value.fullName,
-    Some(value.userId),
-    value.authMethod,
-    value.avatarUrl,
-    value.oAuth1Info,
-    value.oAuth2Info,
-    value.passwordInfo)
-
-  implicit def AuthProfile2BasicProfile(value: AuthorizedProfile): BasicProfile = BasicProfile(
-    value.providerId,
-    value.phoneNumber.getOrElse(""),
-    None,
-    None,
-    value.fullName,
-    Some(value.email.toLowerCase),
-    None,
-    AuthenticationMethod.UserPassword,
-    None,
-    passwordInfo = value.passwordInfo
-  )
+//
+//  implicit def BasicProfile2AuthProfile(value: BasicProfile): AuthorizedProfile = AuthorizedProfile(
+//    value.providerId,
+//    value.email.getOrElse(""),
+//    value.fullName,
+//    Some(value.userId),
+//    value.authMethod,
+//    value.avatarUrl,
+//    value.oAuth1Info,
+//    value.oAuth2Info,
+//    value.passwordInfo)
+//
+//  implicit def AuthProfile2BasicProfile(value: AuthorizedProfile): BasicProfile = BasicProfile(
+//    value.providerId,
+//    value.phoneNumber.getOrElse(""),
+//    None,
+//    None,
+//    value.fullName,
+//    Some(value.email.toLowerCase),
+//    None,
+//    AuthenticationMethod.UserPassword,
+//    None,
+//    passwordInfo = value.passwordInfo
+//  )
 
   val logger = Logger("application.controllers.InMemoryTextService")
 
@@ -65,7 +64,7 @@ class SlickTwilioUserService extends WistUserService[BasicUser] {
 
   override def saveToken(token: TwilioToken): Future[TwilioToken] = ???
 
-  override def find(providerId: String, email: String): Future[Option[BasicProfile]] = {
+  override def find(providerId: String, email: String): Future[Option[AuthorizedProfile]] = {
     Future.successful(
       DB withSession { implicit session =>
         profiles
@@ -73,11 +72,10 @@ class SlickTwilioUserService extends WistUserService[BasicUser] {
           .firstOption
           .map(sp => sp.authorizedProfile)
       }
-        flatMap (f => Some(AuthProfile2BasicProfile(f)))
     )
   }
 
-  override def findByEmailAndProvider(email: String, providerId: String): Future[Option[BasicProfile]] = {
+  override def findByEmailAndProvider(email: String, providerId: String): Future[Option[AuthorizedProfile]] = {
     Future.successful(
       DB withSession { implicit session =>
         profiles
@@ -85,16 +83,14 @@ class SlickTwilioUserService extends WistUserService[BasicUser] {
           .firstOption
           .map(sp => sp.authorizedProfile)
       }
-        flatMap (f => Some(AuthProfile2BasicProfile(f)))
     )
   }
 
-  def link(current: BasicUser, to: BasicProfile): Future[BasicUser] = Future successful {
-    val converted: AuthorizedProfile = to
-    if (current.identities.exists(i => i.providerId == converted.providerId && i.userId == converted.userId)) {
+  def link(current: BasicUser, to: AuthorizedProfile): Future[BasicUser] = Future successful {
+    if (current.identities.exists(i => i.providerId == to.providerId && i.email == to.email)) {
       current
     } else {
-      current.copy(identities = converted :: current.identities)
+      current.copy(identities = to :: current.identities)
     }
   }
 
@@ -112,10 +108,9 @@ class SlickTwilioUserService extends WistUserService[BasicUser] {
     }
   }
 
-  def save(bp: BasicProfile, mode: SaveMode): Future[BasicUser] = Future successful {
+  def save(profile: AuthorizedProfile, mode: SaveMode): Future[BasicUser] = Future successful {
     logger.debug(f"mode: $mode")
 
-    val profile: AuthorizedProfile = bp
     mode match {
       case SaveMode.SignUp =>
         DB withTransaction { implicit session =>
@@ -173,19 +168,7 @@ class SlickTwilioUserService extends WistUserService[BasicUser] {
     }
   }
 
-  override def updatePasswordInfo(user: BasicUser, info: PasswordInfo): Future[Option[BasicProfile]] = Future successful {
-    //    Future.successful {
-    //      for (
-    //        found <- users.values.find(_ == user);
-    //        identityWithPasswordInfo <- found.identities.find(_.providerId == WistUserPassProvider.UsernamePassword)
-    //      ) yield {
-    //        val idx = found.identities.indexOf(identityWithPasswordInfo)
-    //        val updated = identityWithPasswordInfo.copy(passwordInfo = info)
-    //        val updatedIdentities = found.identities.patch(idx, Seq(updated), 1)
-    //        found.copy(identities = updatedIdentities)
-    //        updated
-    //      }
-    //    }
+  override def updatePasswordInfo(user: BasicUser, info: PasswordInfo): Future[Option[AuthorizedProfile]] = Future successful {
     logger.debug("updatePasswordInfo")
 
     DB withSession { implicit session =>
@@ -196,9 +179,10 @@ class SlickTwilioUserService extends WistUserService[BasicUser] {
       profile match {
         case Some(p) =>
           passwords.update(Password(p.passwordId, info.hasher, info.password, info.salt))
-          profile.map(p => p.authorizedProfile).flatMap(f => Some(AuthProfile2BasicProfile(f)))
+          profile.map(p => p.authorizedProfile)
         case None => None
       }
     }
   }
+
 }

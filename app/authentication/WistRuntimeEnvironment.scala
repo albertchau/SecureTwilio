@@ -4,12 +4,11 @@ package authentication
 import authentication.providers.{WistUserPassProvider, WistInstagramProvider, WistFacebookProvider}
 import authentication.services.WistUserService
 import authentication.view_controllers.{Mailer, WistMailTemplates, WistViewTemplates}
-import models.BasicUser
 import securesocial.core.EventListener
 import securesocial.core.authenticator.{HttpHeaderAuthenticatorBuilder, CookieAuthenticatorBuilder, IdGenerator}
 import securesocial.core.providers.utils.{PasswordValidator, PasswordHasher}
 import securesocial.core.services._
-import service.{SlickTwilioUserService, SlickAuthenticatorStore}
+import service.{SlickAuthenticatorStore}
 
 import scala.collection.immutable.ListMap
 
@@ -51,8 +50,6 @@ object WistRuntimeEnvironment {
    */
   abstract class Default[U] extends WistRuntimeEnvironment[U] {
     override lazy val routes: RoutesService = new RoutesService.Default()
-    override lazy val userService: SlickTwilioUserService = new SlickTwilioUserService()
-
     //not usable
     override lazy val viewTemplates: WistViewTemplates = new WistViewTemplates.Default(this)
     override lazy val mailTemplates: WistMailTemplates = new WistMailTemplates.Default(this)
@@ -66,11 +63,6 @@ object WistRuntimeEnvironment {
     override lazy val cacheService: CacheService = new CacheService.Default()
     override lazy val avatarService: Option[AvatarService] = Some(new AvatarService.Default(httpService))
     override lazy val idGenerator: IdGenerator = new IdGenerator.Default()
-
-    override lazy val authenticatorService: AuthenticatorService[U] = new AuthenticatorService[U](
-      new CookieAuthenticatorBuilder[U](new SlickAuthenticatorStore, idGenerator),
-      new HttpHeaderAuthenticatorBuilder[U](new SlickAuthenticatorStore, idGenerator)
-    )
 
     override lazy val eventListeners: List[EventListener[U]] = List()
 

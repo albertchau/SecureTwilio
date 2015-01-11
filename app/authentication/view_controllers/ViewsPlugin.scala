@@ -4,7 +4,7 @@ import authentication.WistRuntimeEnvironment
 import play.api.data.Form
 import play.api.i18n.Lang
 import play.api.mvc.{Controller, RequestHeader}
-import play.api.templates.{Html, Txt}
+import play.twirl.api._
 import securesocial.controllers.{ChangeInfo, RegistrationInfo, ViewTemplates}
 import securesocial.core.BasicProfile
 
