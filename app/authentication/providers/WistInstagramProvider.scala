@@ -1,6 +1,6 @@
 package authentication.providers
 
-import authentication.{WistOAuth2Provider, WistOAuth2Client}
+import authentication.WistOAuth2Client
 import models.AuthorizedProfile
 import securesocial.core.services.{RoutesService, CacheService}
 import securesocial.core.{OAuth2Info, AuthenticationException}

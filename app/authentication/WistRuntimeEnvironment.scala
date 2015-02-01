@@ -1,7 +1,7 @@
 package authentication
 
 
-import authentication.providers.{WistUserPassProvider, WistInstagramProvider, WistFacebookProvider}
+import authentication.providers._
 import authentication.services.WistUserService
 import authentication.view_controllers.{Mailer, WistMailTemplates, WistViewTemplates}
 import securesocial.core.EventListener

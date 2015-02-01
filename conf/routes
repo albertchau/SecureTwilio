@@ -21,3 +21,5 @@ GET         /signup                   @controllers.Registration.startSignUp
 POST        /signup                   @controllers.Registration.handleStartSignUp
 GET         /signup/:mailToken        @controllers.Registration.signUp(mailToken)
 POST        /signup/:mailToken        @controllers.Registration.handleSignUp(mailToken)
+
+POST        /api/authenticate/:provider        @securesocial.controllers.LoginApi.authenticate(provider, builder = "token")

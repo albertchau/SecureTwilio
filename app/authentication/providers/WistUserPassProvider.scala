@@ -1,7 +1,7 @@
 package authentication.providers
 
-import authentication.WistAuthenticationResult.{NavigationFlow, Authenticated}
-import authentication.{WistAuthenticationResult, WistIdentityProvider, WistApiSupport}
+import WistAuthenticationResult.{NavigationFlow, Authenticated}
+import authentication.WistApiSupport
 import authentication.services.WistUserService
 import authentication.view_controllers.WistViewTemplates
 import play.api.Play._

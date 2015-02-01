@@ -1,10 +1,11 @@
-package authentication
+package authentication.providers
 
 import models.AuthorizedProfile
-import play.api.mvc.{Result, AnyContent, Request}
 import play.api.Play
+import play.api.mvc.{AnyContent, Request, Result}
 import securesocial.core.AuthenticationMethod
-import concurrent.Future
+
+import scala.concurrent.Future
 
 /**
  * Base class for all Identity Providers.
@@ -43,7 +44,7 @@ object WistIdentityProvider {
 
   // todo: do I want this here?
   val sslEnabled: Boolean = {
-    import Play.current
+    import play.api.Play.current
     val result = current.configuration.getBoolean("securesocial.ssl").getOrElse(false)
     if (!result && Play.isProd) {
       logger.warn(

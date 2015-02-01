@@ -1,18 +1,18 @@
-package authentication
+package authentication.providers
 
 import _root_.java.net.URLEncoder
 import _root_.java.util.UUID
 
 import models.AuthorizedProfile
 import play.api.Play
-import play.api.libs.json.{ JsError, JsSuccess, JsValue, Json }
+import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.libs.ws._
 import play.api.mvc._
 import securesocial.core._
-import securesocial.core.services.{ CacheService, HttpService, RoutesService }
+import securesocial.core.services.{CacheService, HttpService, RoutesService}
 
 import scala.collection.JavaConversions._
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 trait WistOAuth2Client {
   val settings: WistOAuth2Settings

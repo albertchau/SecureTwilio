@@ -1,6 +1,6 @@
 package authentication.providers
 
-import authentication.{WistOAuth2Client, WistOAuth2Provider}
+import authentication.WistOAuth2Client
 import models.AuthorizedProfile
 import play.api.libs.json.JsObject
 import play.api.libs.ws.Response
